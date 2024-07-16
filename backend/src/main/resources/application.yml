@@ -1,0 +1,22 @@
+spring:
+    application:
+        name: backend
+    mvc:
+        converters:
+            preferred-json-mapper: gson
+    web:
+        locale: en
+        resources:
+            add-mappings: false
+    jpa:
+        database: mysql
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate.hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+    datasource:
+        url: jdbc:mysql://localhost:13306/homework_manager
+        username: user
+        password: password
+server:
+    port: 8080
