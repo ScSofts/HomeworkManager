@@ -56,6 +56,15 @@ public class HomeworkService {
         }
     }
 
+    public Homework queryHomework(Long homework_id) {
+        try {
+            return homeworkRepository.findById(homework_id ).orElse(null);
+        } catch (Exception e) {
+            log.warn("Failed to query homework by homework_id: {}, reason: {}", homework_id, e.getMessage());
+            return null;
+        }
+    }
+
     public List<Homework> queryHomeworkByClassroom(Classroom classroom) {
         try {
             return homeworkRepository.findAllByClassroom(classroom);

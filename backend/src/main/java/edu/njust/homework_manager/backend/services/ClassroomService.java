@@ -124,5 +124,14 @@ public class ClassroomService {
         }
     }
 
+    public Classroom queryClassroomById(Long classroom_id) {
+        try {
+            return classroomRepository.findById(classroom_id).orElse(null);
+        } catch (Exception e) {
+            log.warn("Failed to query classroom by classroom_id: {}, reason: {}", classroom_id, e.getMessage());
+            return null;
+        }
+    }
+
 
 }

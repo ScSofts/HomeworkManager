@@ -20,3 +20,8 @@ spring:
         password: password
 server:
     port: 8080
+    cors:
+        allowed-origins: ["http://localhost:3002"]
+
+security:
+    salt: homework-salt
