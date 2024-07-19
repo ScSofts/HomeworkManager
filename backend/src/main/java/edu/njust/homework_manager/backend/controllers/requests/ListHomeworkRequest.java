@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
-public record ListTeacherHomeworksRequest(
+public record ListHomeworkRequest(
         @NotEmpty(message = "error.token.NotEmpty")
         String token,
 

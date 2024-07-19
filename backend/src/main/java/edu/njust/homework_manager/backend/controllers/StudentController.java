@@ -1,13 +1,18 @@
 package edu.njust.homework_manager.backend.controllers;
 
+import ch.qos.logback.core.status.Status;
 import com.google.gson.Gson;
-import edu.njust.homework_manager.backend.controllers.requests.*;
+import edu.njust.homework_manager.backend.controllers.requests.GetHomeworkRequest;
+import edu.njust.homework_manager.backend.controllers.requests.ListClassroomRequest;
+import edu.njust.homework_manager.backend.controllers.requests.ListHomeworkRequest;
+import edu.njust.homework_manager.backend.controllers.requests.SubmitHomeworkRequest;
 import edu.njust.homework_manager.backend.controllers.storages.TokenStorage;
 import edu.njust.homework_manager.backend.models.Classroom;
 import edu.njust.homework_manager.backend.models.Homework;
 import edu.njust.homework_manager.backend.models.User;
 import edu.njust.homework_manager.backend.services.ClassroomService;
 import edu.njust.homework_manager.backend.services.HomeworkService;
+import edu.njust.homework_manager.backend.services.SubmissionService;
 import edu.njust.homework_manager.backend.services.UserService;
 import edu.njust.homework_manager.protocol.ApiResult;
 import jakarta.validation.Valid;
@@ -23,26 +28,27 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 @RestController
-@RequestMapping("/teacher")
-public class TeacherController {
-    private final Gson gson;
+@RequestMapping("/student")
+public class StudentController {
     private final MessageSource messageSource;
-    private final ClassroomService classroomService;
+    private final Gson gson;
     private final UserService userService;
+    private final ClassroomService classroomService;
     private final HomeworkService homeworkService;
+    private final SubmissionService submissionService;
 
     @Value("${security.salt}")
     private String salt;
 
-    public TeacherController(@Qualifier("gson") Gson gson, @Qualifier("messageSource") MessageSource messageSource, ClassroomService classroomService, UserService userService, HomeworkService homeworkService) {
-        this.gson = gson;
+    public StudentController(@Qualifier("messageSource") MessageSource messageSource, @Qualifier("gson") Gson gson, UserService userService, ClassroomService classroomService, HomeworkService homeworkService, SubmissionService submissionService) {
         this.messageSource = messageSource;
-        this.classroomService = classroomService;
+        this.gson = gson;
         this.userService = userService;
+        this.classroomService = classroomService;
         this.homeworkService = homeworkService;
+        this.submissionService = submissionService;
     }
 
     @PostMapping("/list_classroom")
@@ -54,7 +60,7 @@ public class TeacherController {
     ) {
         var token = request.token();
         var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
             return ResponseEntity.status(403)
                     .body(ApiResult.<List<Long>>builder()
                             .status(403)
@@ -64,7 +70,7 @@ public class TeacherController {
         }
 
         var user = userService.queryUser(username);
-        if(user == null){
+        if (user == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<List<Long>>builder()
                             .status(400)
@@ -72,19 +78,20 @@ public class TeacherController {
                             .error(messageSource.getMessage("error.user.NotFound", null, locale))
                             .build());
         }
-        var classes = classroomService.queryClassroomByTeacher(user);
+        var classes = classroomService.queryClassroomByStudent(user);
         return ResponseEntity.ok(
                 ApiResult.<List<Long>>builder()
                         .status(200)
                         .timestamp(new java.util.Date())
                         .data(
                                 classes
-                                    .stream()
-                                    .map(Classroom::getClassroom_id)
-                                    .toList()
+                                        .stream()
+                                        .map(Classroom::getClassroom_id)
+                                        .toList()
                         ).build()
         );
     }
+
 
     @PostMapping("/list_homework")
     public ResponseEntity<ApiResult<List<Long>>> listHomework(
@@ -95,7 +102,8 @@ public class TeacherController {
     ) {
         var token = request.token();
         var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
+        var classroom_id = request.classroom_id();
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
             return ResponseEntity.status(403)
                     .body(ApiResult.<List<Long>>builder()
                             .status(403)
@@ -105,7 +113,7 @@ public class TeacherController {
         }
 
         var user = userService.queryUser(username);
-        if(user == null){
+        if (user == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<List<Long>>builder()
                             .status(400)
@@ -113,26 +121,25 @@ public class TeacherController {
                             .error(messageSource.getMessage("error.user.NotFound", null, locale))
                             .build());
         }
-
-        var classroom = classroomService.queryClassroomById(request.classroom_id());
-
-        if(!classroom.getTeacher().equals(user)){
-            return ResponseEntity.status(403)
+        var classroom = classroomService.queryClassroomById(classroom_id);
+        if (classroom == null) {
+            return ResponseEntity.status(400)
                     .body(ApiResult.<List<Long>>builder()
-                            .status(403)
+                            .status(400)
                             .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.homework.Permission", null, locale))
+                            .error(messageSource.getMessage("error.classroom.NotFound", null, locale))
                             .build());
         }
+        var homeworks = homeworkService.queryHomeworkByClassroom(classroom);
         return ResponseEntity.ok(
                 ApiResult.<List<Long>>builder()
                         .status(200)
                         .timestamp(new java.util.Date())
                         .data(
-                                homeworkService.queryHomeworkByClassroom(classroom)
-                                    .stream()
-                                    .map(Homework::getHomework_id)
-                                    .toList()
+                                homeworks
+                                        .stream()
+                                        .map(Homework::getHomework_id)
+                                        .toList()
                         ).build()
         );
     }
@@ -155,9 +162,9 @@ public class TeacherController {
     ) {
         var token = request.token();
         var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
             return ResponseEntity.status(403)
-                    .body(ApiResult.<HomeworkBrief>builder()
+                    .body(ApiResult.<StudentController.HomeworkBrief>builder()
                             .status(403)
                             .timestamp(new java.util.Date())
                             .error(messageSource.getMessage("error.login.Expired", null, locale))
@@ -165,7 +172,7 @@ public class TeacherController {
         }
 
         var user = userService.queryUser(username);
-        if(user == null){
+        if (user == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<HomeworkBrief>builder()
                             .status(400)
@@ -175,7 +182,7 @@ public class TeacherController {
         }
 
         var homework = homeworkService.queryHomework(request.homework_id());
-        if(homework == null){
+        if (homework == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<HomeworkBrief>builder()
                             .status(400)
@@ -217,7 +224,7 @@ public class TeacherController {
     ) {
         var token = request.token();
         var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
             return ResponseEntity.status(403)
                     .body(ApiResult.<HomeworkDetail>builder()
                             .status(403)
@@ -227,7 +234,7 @@ public class TeacherController {
         }
 
         var user = userService.queryUser(username);
-        if(user == null){
+        if (user == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<HomeworkDetail>builder()
                             .status(400)
@@ -237,7 +244,7 @@ public class TeacherController {
         }
 
         var homework = homeworkService.queryHomework(request.homework_id());
-        if(homework == null){
+        if (homework == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<HomeworkDetail>builder()
                             .status(400)
@@ -262,136 +269,64 @@ public class TeacherController {
         );
     }
 
-
-    // Create homework
-    // POST /teacher/create_homework
-    // Request
-    // {
-    //     "token": "string",
-    //     "username": "string",
-    //     "classroom_id": “long”,
-    //     "title": "string",
-    // }
-    // Result: return the homework_id
-    @PostMapping("/create_homework")
-    public ResponseEntity<ApiResult<Long>> createHomework(
+    @PostMapping("/submit_homework")
+    public ResponseEntity<ApiResult<Boolean>> submitHomework(
             @Valid
             @RequestBody
-            CreateHomeworkRequest request,
+            SubmitHomeworkRequest request,
             Locale locale
     ) {
         var token = request.token();
         var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
-            return ResponseEntity.status(403)
-                    .body(ApiResult.<Long>builder()
-                            .status(403)
-                            .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.login.Expired", null, locale))
-                            .build());
-        }
-
-        var user = userService.queryUser(username);
-        if(user == null){
-            return ResponseEntity.status(400)
-                    .body(ApiResult.<Long>builder()
-                            .status(400)
-                            .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
-                            .build());
-        }
-
-        var classroom = classroomService.queryClassroomById(request.classroom_id());
-        if(classroom == null){
-            return ResponseEntity.status(400)
-                    .body(ApiResult.<Long>builder()
-                            .status(400)
-                            .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.classroom.NotFound", null, locale))
-                            .build());
-        }
-
-        var homework = homeworkService.createHomework(classroom, request.title(), "", new Date());
-
-        if(Objects.isNull(homework)){
-            return ResponseEntity.status(500)
-                    .body(ApiResult.<Long>builder()
-                            .status(500)
-                            .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.homework.Create", null, locale))
-                            .build());
-
-        }
-        return ResponseEntity.ok(
-                ApiResult.<Long>builder()
-                        .status(200)
-                        .timestamp(new java.util.Date())
-                        .data(homework.getHomework_id())
-                        .build()
-        );
-    }
-
-    @PostMapping("/update_homework")
-    public ResponseEntity<ApiResult<Boolean>> updateHomework(
-            @Valid
-            @RequestBody
-            UpdateHomeworkRequest request,
-            Locale locale
-    ) {
-        var token = request.token();
-        var username = request.username();
-        if(!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)){
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
             return ResponseEntity.status(403)
                     .body(ApiResult.<Boolean>builder()
                             .status(403)
                             .timestamp(new java.util.Date())
                             .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .data(false)
                             .build());
         }
 
         var user = userService.queryUser(username);
-        if(user == null){
+        if (user == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<Boolean>builder()
                             .status(400)
                             .timestamp(new java.util.Date())
                             .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .data(false)
                             .build());
         }
-
-
 
         var homework = homeworkService.queryHomework(request.homework_id());
-        if(homework == null){
+        if (homework == null) {
             return ResponseEntity.status(400)
                     .body(ApiResult.<Boolean>builder()
                             .status(400)
                             .timestamp(new java.util.Date())
                             .error(messageSource.getMessage("error.homework.NotFound", null, locale))
+                            .data(false)
                             .build());
         }
 
-        if(!homeworkService.updateHomework(
-                request.homework_id(),
-                request.title(),
-                request.description(),
-                request.deadline()
-        )){
-            return ResponseEntity.status(500)
-                    .body(ApiResult.<Boolean>builder()
-                            .status(500)
+        var result = submissionService.createSubmission(homework, user, request.content());
+        if (result == null) {
+            return ResponseEntity.ok(
+                    ApiResult.<Boolean>builder()
+                            .status(200)
                             .timestamp(new java.util.Date())
-                            .error(messageSource.getMessage("error.homework.Update", null, locale))
+                            .data(true)
+                            .build()
+            );
+        } else {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.submit.Failed", null, locale))
+                            .data(false)
                             .build());
         }
-        return ResponseEntity.ok(
-                ApiResult.<Boolean>builder()
-                        .status(200)
-                        .timestamp(new java.util.Date())
-                        .data(true)
-                        .build()
-        );
     }
-
-
 }

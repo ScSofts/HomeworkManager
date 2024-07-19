@@ -3,7 +3,11 @@ package edu.njust.homework_manager.adapters;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.springframework.core.serializer.Deserializer;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Date;
 
@@ -14,4 +18,5 @@ public class GsonDateAdapter implements JsonSerializer<Date> {
     public JsonElement serialize(Date date, Type type, JsonSerializationContext jsonSerializationContext) {
         return jsonSerializationContext.serialize(date.getTime());
     }
+
 }
