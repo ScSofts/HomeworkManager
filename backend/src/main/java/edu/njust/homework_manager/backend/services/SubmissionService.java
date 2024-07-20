@@ -85,6 +85,17 @@ public class SubmissionService {
         }
     }
 
+    @Nullable
+    public Submission getSubmissionById(Long submission_id) {
+        try {
+            var submissionOptional = submissionRepository.findById(submission_id);
+            return submissionOptional.orElse(null);
+        } catch (Exception e) {
+            log.warn("Failed to get submission by submission_id: {}, reason: {}", submission_id, e.getMessage());
+            return null;
+        }
+    }
+
     public boolean updateSubmission(Long submission_id, String content) {
         try {
             var submissionOptional = submissionRepository.findById(submission_id);

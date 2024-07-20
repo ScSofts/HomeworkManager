@@ -14,7 +14,7 @@ public class ClassroomStudents {
     public Long classroom_record_id;
 
 
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "classroom_id")
     public Classroom classroom;
 

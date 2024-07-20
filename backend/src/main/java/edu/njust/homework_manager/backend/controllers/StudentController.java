@@ -1,6 +1,5 @@
 package edu.njust.homework_manager.backend.controllers;
 
-import ch.qos.logback.core.status.Status;
 import com.google.gson.Gson;
 import edu.njust.homework_manager.backend.controllers.requests.GetHomeworkRequest;
 import edu.njust.homework_manager.backend.controllers.requests.ListClassroomRequest;
@@ -9,6 +8,7 @@ import edu.njust.homework_manager.backend.controllers.requests.SubmitHomeworkReq
 import edu.njust.homework_manager.backend.controllers.storages.TokenStorage;
 import edu.njust.homework_manager.backend.models.Classroom;
 import edu.njust.homework_manager.backend.models.Homework;
+import edu.njust.homework_manager.backend.models.Submission;
 import edu.njust.homework_manager.backend.models.User;
 import edu.njust.homework_manager.backend.services.ClassroomService;
 import edu.njust.homework_manager.backend.services.HomeworkService;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/student")
@@ -310,8 +311,41 @@ public class StudentController {
                             .build());
         }
 
-        var result = submissionService.createSubmission(homework, user, request.content());
-        if (result == null) {
+
+        if(homework.getDeadline().before(new Date())){
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.submit.Deadline", null, locale))
+                            .data(false)
+                            .build());
+        }
+
+        var last_submit = submissionService
+                .querySubmissionsByStudent(user)
+                .stream()
+                .filter(submission -> {
+                    return Objects.equals(submission.homework.getHomework_id(), homework.getHomework_id());
+                }).findFirst();
+
+        Submission result;
+        if(last_submit.isPresent()){
+            result = last_submit.get();
+            if(result.getStatus()  == Submission.Status.ACCEPTED || !submissionService.updateSubmission(result.getSubmission_id(), request.content())){
+                return ResponseEntity.status(400)
+                        .body(ApiResult.<Boolean>builder()
+                                .status(400)
+                                .timestamp(new java.util.Date())
+                                .error(messageSource.getMessage("error.submit.UpdateFailed", null, locale))
+                                .data(false)
+                                .build());
+            }
+        }else{
+            result = submissionService.createSubmission(homework, user, request.content());
+        }
+
+        if (result != null) {
             return ResponseEntity.ok(
                     ApiResult.<Boolean>builder()
                             .status(200)
@@ -327,6 +361,88 @@ public class StudentController {
                             .error(messageSource.getMessage("error.submit.Failed", null, locale))
                             .data(false)
                             .build());
+        }
+    }
+
+    public record SubmissionStatus(
+            Boolean submitted,
+            Long submission_id,
+            Long homework_id,
+            String content,
+            Submission.Status status,
+            Date submit_at
+    ) {
+    }
+
+    @PostMapping("/check_submission")
+    public ResponseEntity<ApiResult<SubmissionStatus>> checkSubmission(
+            @Valid
+            @RequestBody
+            GetHomeworkRequest request,
+            Locale locale
+    ){
+        var token = request.token();
+        var username = request.username();
+        if (!TokenStorage.verify(username, User.Role.STUDENT, token, gson, salt)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<SubmissionStatus>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .build());
+        }
+
+        var user = userService.queryUser(username);
+        if (user == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<SubmissionStatus>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .build());
+        }
+
+        var homework = homeworkService.queryHomework(request.homework_id());
+        if (homework == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<SubmissionStatus>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.homework.NotFound", null, locale))
+                            .build());
+        }
+
+        var submission = submissionService.getSubmission(homework, user);
+        if(submission == null){
+            return ResponseEntity.ok(
+                    ApiResult.<SubmissionStatus>builder()
+                            .status(200)
+                            .timestamp(new java.util.Date())
+                            .data(new SubmissionStatus(
+                                    false,
+                                    null,
+                                    homework.getHomework_id(),
+                                    null,
+                                    null,
+                                    null
+                            ))
+                            .build()
+            );
+        }else{
+            return ResponseEntity.ok(
+                    ApiResult.<SubmissionStatus>builder()
+                            .status(200)
+                            .timestamp(new java.util.Date())
+                            .data(new SubmissionStatus(
+                                    true,
+                                    submission.getSubmission_id(),
+                                    homework.getHomework_id(),
+                                    submission.getContent(),
+                                    submission.getStatus(),
+                                    submission.getSubmit_at()
+                            ))
+                            .build()
+            );
         }
     }
 }
