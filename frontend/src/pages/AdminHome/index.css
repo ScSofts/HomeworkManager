@@ -1,0 +1,82 @@
+/* index.css */
+
+.app-layout {
+    min-height: 100vh;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background: #1890ff;
+    color: white;
+}
+
+.logo {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-name {
+    margin-right: 15px;
+    font-size: 16px;
+}
+
+.logout-icon {
+    margin-right: 5px;
+    font-size: 16px;
+}
+
+.app-sider {
+    background: #001529;
+}
+
+.app-content {
+    padding: 24px;
+    background: #fff;
+}
+
+/* 自定义 Ant Design 组件样式 */
+.ant-layout-sider-children {
+    background: #001529;
+}
+
+.ant-menu-dark {
+    background: #001529;
+}
+
+.ant-menu-item-selected {
+    background-color: #1890ff !important;
+}
+
+.ant-menu-item:hover {
+    background-color: #40a9ff !important;
+}
+
+.ant-popover-inner-content {
+    color: #001529;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .user-info {
+        margin-top: 10px;
+    }
+
+    .app-content {
+        padding: 10px;
+    }
+}

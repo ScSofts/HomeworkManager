@@ -14,7 +14,7 @@ public record GetHomeworkRequest(
         @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "error.username.Pattern")
         String username,
 
-        @NotNull(message = "error.homeworkId.NotNull")
+        @NotNull(message = "error.homeworkId.Null")
         Long homework_id
 ) {
 }

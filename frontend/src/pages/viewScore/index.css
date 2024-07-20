@@ -1,0 +1,90 @@
+.view-score-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: calc(100vh - 64px); /* 假设顶部导航栏高度为64px，根据实际情况调整 */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.selection-section {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.content-section {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0; /* 防止 flex 子元素溢出 */
+}
+
+.left-column, .right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 防止出现不必要的滚动条 */
+}
+
+.right-column {
+    gap: 20px;
+}
+
+.assignment-section, .homework-info, .grading-section {
+    overflow: auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.assignment-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* 占满左列 */
+}
+
+.homework-info, .grading-section {
+    flex: 1; /* 平分右列空间 */
+    width: 100%; /* 确保宽度相同 */
+}
+
+.assignment-section h3, .homework-info h3, .grading-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.assignment-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #d9d9d9;
+}
+
+.score-details h4 {
+    margin-bottom: 10px;
+}
+
+.score-details label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+
+
+.pagination {
+    margin-top: auto; /* 将分页推到底部 */
+    padding: 10px 0;
+}
+
+@media (max-width: 768px) {
+    .content-section {
+        flex-direction: column;
+    }
+
+    .view-score-container {
+        height: auto;
+    }
+}

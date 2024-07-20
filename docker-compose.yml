@@ -1,23 +1,23 @@
 version: "3"
 
 services:
-#  backend:
-#    image: backend:latest
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8080:8080"
-#    volumes:
-#      - ./data/files:/app/data/files
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/homework_manager
-#      SPRING_DATASOURCE_USERNAME: user
-#      SPRING_DATASOURCE_PASSWORD: password
-#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-#      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
-#    depends_on:
-#      - db
+  backend:
+    image: backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "80:8080"
+    volumes:
+      - ./data/files:/app/data/files
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/homework_manager
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+    depends_on:
+      - db
   db:
     image: mysql:8.4
     container_name: db

@@ -1,0 +1,131 @@
+body {
+    background-color: #f0f2f5;
+    background-image:
+            linear-gradient(90deg, #ffffff33 1px, transparent 1px),
+            linear-gradient(#ffffff33 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.grade-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.grade-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #1890ff, #52c41a);
+}
+
+.assignment-section, .grading-section {
+    width: 48%;
+    background-color: #fafafa;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.assignment-section h3, .grading-section h3 {
+    color: #1890ff;
+    border-bottom: 2px solid #1890ff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.assignment-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+}
+
+.question-scores {
+    margin-top: 20px;
+}
+
+.question-scores input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.question-scores .quill {
+    height: 250px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.question-scores .ql-container {
+    height: calc(100% - 42px);
+    font-size: 16px;
+}
+
+.question-scores .ql-toolbar {
+    background-color: #fafafa;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.submit-button {
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    display: block;
+    width: 100%;
+}
+
+.submit-button:hover {
+    background-color: #40a9ff;
+}
+
+@media (max-width: 768px) {
+    .grade-container {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .assignment-section, .grading-section {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
+
+/* 装饰元素 */
+.grade-container::after {
+    content: "✏️";
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 24px;
+    opacity: 0.2;
+}
+
+.assignment-section::before {
+    content: "📚";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    opacity: 0.2;
+}

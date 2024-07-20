@@ -101,7 +101,18 @@ public class ClassroomService {
         }
     }
 
-    // 帮我生成学生加入、退出班级的代码
+    public List<User> getStudents(Classroom classroom) {
+        try {
+            return classroomStudentsRepository.findAllByClassroom(classroom).stream()
+                    .map(ClassroomStudents::getStudent)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("Failed to get students by classroom: {}, reason: {}", classroom, e.getMessage());
+            return null;
+        }
+    }
+
+    // 学生加入、退出班级的代码
     public void joinClassroom(User student, Classroom classroom) {
         try {
             var classroomStudent = ClassroomStudents.builder()
@@ -114,13 +125,15 @@ public class ClassroomService {
         }
     }
 
-    public void leaveClassroom(User student, Classroom classroom) {
+    public boolean leaveClassroom(User student, Classroom classroom) {
         try {
             classroomStudentsRepository.findAllByClassroom(classroom).stream()
                     .filter(cs -> cs.getStudent().equals(student))
                     .findFirst().ifPresent(classroomStudentsRepository::delete);
+            return true;
         } catch (Exception e) {
             log.warn("Failed to leave classroom for student: {}, reason: {}", student, e.getMessage());
+            return false;
         }
     }
 

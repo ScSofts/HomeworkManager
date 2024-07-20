@@ -24,7 +24,7 @@ public class Homework {
 
     public Date deadline;
 
-    @ManyToOne(cascade = {CascadeType.REMOVE, CascadeType.REFRESH})
+    @ManyToOne(cascade = {CascadeType.REMOVE})
     @JoinColumn(name = "teacher_id")
     public User teacher;
 

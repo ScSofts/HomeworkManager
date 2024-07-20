@@ -24,7 +24,7 @@ public class Classroom {
     public Date created_at;
 
     @ManyToOne(cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "teacher_id", insertable = false, updatable = false)
+    @JoinColumn(name = "teacher_id")
     public User teacher;
 
 

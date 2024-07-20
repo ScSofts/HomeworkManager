@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
@@ -59,9 +60,9 @@ public class FileController {
         }
     }
 
-    @PutMapping("/upload")
+    @PostMapping("/upload")
     public ResponseEntity<ApiResult<Boolean>> uploadFile(
-            @RequestBody byte[] data,
+            @RequestParam("file") MultipartFile data,
             @RequestHeader("Token") String token,
             @RequestHeader("Username") String username,
             @RequestHeader("Role")
@@ -88,13 +89,13 @@ public class FileController {
         }
 
         var prefix = switch (roleEnum) {
-            case STUDENT -> "submit_";
-            case TEACHER -> "homework_" + username + "_";
+            case STUDENT -> "submit_"+ username + "_";
+            case TEACHER -> "homework_";
         };
 
         File file = new File(path, prefix + homework_id + ".png");
         try {
-            var image = ImageIO.read(new ByteArrayInputStream(data));
+            var image = ImageIO.read(new ByteArrayInputStream(data.getBytes()));
             ImageIO.write(image, "png", file);
         } catch (IOException e) {
             return ResponseEntity

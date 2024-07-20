@@ -9,20 +9,19 @@ import edu.njust.homework_manager.backend.models.Submission;
 import edu.njust.homework_manager.backend.models.User;
 import edu.njust.homework_manager.backend.services.*;
 import edu.njust.homework_manager.protocol.ApiResult;
+import edu.njust.homework_manager.utils.Tuple;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 @RestController
 @RequestMapping("/teacher")
@@ -633,4 +632,270 @@ public class TeacherController {
                         .build()
         );
     }
+
+
+    public record ClassStatistics(
+            Long homework_id,
+            String title,
+            List<Tuple<String,Long>> student_grades,
+            Long unsubmitted_count
+    ) {
+    }
+
+    @PostMapping("/get_class_statistics")
+    public ResponseEntity<ApiResult<List<ClassStatistics>>> getClassStatistics(
+            @Valid
+            @RequestBody
+            ListHomeworkRequest request,
+            Locale locale
+    ){
+        var token = request.token();
+        var username = request.username();
+        if (!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<List<ClassStatistics>>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .build());
+        }
+
+        var user = userService.queryUser(username);
+        if (user == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<List<ClassStatistics>>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .build());
+        }
+
+        var classroom = classroomService.queryClassroomById(request.classroom_id());
+        if (classroom == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<List<ClassStatistics>>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.classroom.NotFound", null, locale))
+                            .build());
+        }
+        if(!classroom.getTeacher().getUserId().equals(user.getUserId())){
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<List<ClassStatistics>>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.homework.Permission", null, locale))
+                            .build());
+        }
+
+        var homeworks = homeworkService.queryHomeworkByClassroom(classroom);
+        return ResponseEntity.ok(
+                ApiResult.<List<ClassStatistics>>builder()
+                        .status(200)
+                        .timestamp(new Date())
+                        .data(
+                                homeworks.stream().map(homework -> {
+                                    var submissions = submissionService.querySubmissionsByHomework(homework);
+                                    List<Tuple<String, Long>> student_grades = submissions.stream().map(submission -> {
+                                        var grading = gradingService.getGradingBySubmission(submission);
+                                        if(grading == null){
+                                            return new Tuple<>(submission.getStudent().getUsername(), -1L);
+                                        }
+                                        return new Tuple<>(submission.getStudent().getUsername(),(long)grading.getScore());
+                                    }).toList();
+
+                                    Long unsubmitted_count = (long) (classroomService
+                                                                                .getStudents(homework.classroom)
+                                                                                .size() - submissions.size());
+                                    return new ClassStatistics(homework.getHomework_id(),homework.getTitle(), student_grades, unsubmitted_count);
+                                }).toList()
+                        ).build()
+        );
+    }
+
+    public record Student(
+            String username,
+            Long student_id,
+            Date created_at,
+            @Nullable
+            Date last_login
+    ) {
+
+    }
+
+    @PostMapping("/list_student")
+    public ResponseEntity<ApiResult<List<Student>>> listStudent(
+            @Valid
+            @RequestBody
+            ListStudentRequest request,
+            Locale locale
+    ){
+        var token = request.token();
+        var username = request.username();
+        var classroom_id = request.classroom_id();
+        if (!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<List<Student>>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .build());
+        }
+
+        var user = userService.queryUser(username);
+        if (user == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<List<Student>>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .build());
+        }
+        var classroom = classroomService.queryClassroomById(classroom_id);
+        if (classroom == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<List<Student>>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.classroom.NotFound", null, locale))
+                            .build());
+        }
+        var students = classroomService.getStudents(classroom);
+        return ResponseEntity.ok(
+                ApiResult.<List<Student>>builder()
+                        .status(200)
+                        .timestamp(new java.util.Date())
+                        .data(
+                                students
+                                        .stream()
+                                        .map(student -> new Student(
+                                                student.getUsername(),
+                                                student.getUserId(),
+                                                student.getCreatedAt(),
+                                                student.getLastLogin()
+                                        ))
+                                        .toList()
+                        ).build()
+        );
+    }
+
+
+
+
+    // 返回classroom_id
+    @PostMapping("/create_classroom")
+    public ResponseEntity<ApiResult<Long>> createClassroom(
+            @Valid
+            @RequestBody
+            CreateClassroomRequest request,
+            Locale locale
+    ){
+        var token = request.token();
+        var username = request.username();
+        if (!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<Long>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .build());
+        }
+
+        var teacher = userService.queryUser(username);
+        if (teacher == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Long>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .build());
+        }
+
+
+        var classroom = classroomService.createClassroom(teacher, List.of());
+        if (classroom == null) {
+            return ResponseEntity.status(500)
+                    .body(ApiResult.<Long>builder()
+                            .status(500)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.classroom.Create", null, locale))
+                            .build());
+        }
+        return ResponseEntity.ok(
+                ApiResult.<Long>builder()
+                        .status(200)
+                        .timestamp(new java.util.Date())
+                        .data(classroom._1().getClassroom_id())
+                        .build()
+        );
+    }
+
+
+    @PostMapping("/remove_student")
+    public ResponseEntity<ApiResult<Boolean>> removeStudent(
+            @Valid
+            @RequestBody
+            RemoveStudentRequest request,
+            Locale locale
+    ){
+        var token = request.token();
+        var username = request.username();
+        var classroom_id = request.classroom_id();
+        var student_id = request.student_id();
+        if (!TokenStorage.verify(username, User.Role.TEACHER, token, gson, salt)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(403)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.login.Expired", null, locale))
+                            .build());
+        }
+
+        var teacher = userService.queryUser(username);
+        if (teacher == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.user.NotFound", null, locale))
+                            .build());
+        }
+
+        var classroom = classroomService.queryClassroomById(classroom_id);
+        if (classroom == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.classroom.NotFound", null, locale))
+                            .build());
+        }
+
+        var student = userService.queryUser(student_id);
+        if (student == null) {
+            return ResponseEntity.status(400)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(400)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.student.NotFound", null, locale))
+                            .build());
+        }
+
+        if(!classroomService.leaveClassroom(student, classroom)){
+            return ResponseEntity.status(500)
+                    .body(ApiResult.<Boolean>builder()
+                            .status(500)
+                            .timestamp(new java.util.Date())
+                            .error(messageSource.getMessage("error.student.Remove", null, locale))
+                            .build());
+        }
+        return ResponseEntity.ok(
+                ApiResult.<Boolean>builder()
+                        .status(200)
+                        .timestamp(new java.util.Date())
+                        .data(true)
+                        .build()
+        );
+    }
+
 }

@@ -42,6 +42,16 @@ public class UserService {
     }
 
     @Nullable
+    public User queryUser(Long user_id) {
+        try {
+            return userRepository.findById(user_id).orElse(null);
+        }catch (Exception e){
+            log.warn("Failed to query user by id: {}, reason: {}", user_id, e.getMessage());
+            return null;
+        }
+    }
+
+    @Nullable
     public User createUser(String username, String password, User.Role role) {
         var user = User.builder()
                 .username(username)

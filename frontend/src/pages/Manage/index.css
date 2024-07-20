@@ -1,0 +1,93 @@
+/*body {*/
+/*    background-color: #f0f2f5;*/
+/*    background-image:*/
+/*            linear-gradient(90deg, #ffffff33 1px, transparent 1px),*/
+/*            linear-gradient(#ffffff33 1px, transparent 1px);*/
+/*    background-size: 20px 20px;*/
+/*}*/
+
+/*.manage-container {*/
+/*    max-width: 1000px;*/
+/*    margin: 20px auto;*/
+/*    padding: 30px;*/
+/*    background-color: white;*/
+/*    box-shadow: 0 0 10px rgba(0,0,0,0.1);*/
+/*    border-radius: 8px;*/
+/*    position: relative;*/
+/*    overflow: hidden;*/
+/*    !*flex*!*/
+/*    display: flex;*/
+/*}*/
+
+/*.manage-container::before {*/
+/*    content: "";*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    left: 0;*/
+/*    right: 0;*/
+/*    height: 5px;*/
+/*    background: linear-gradient(90deg, #1890ff, #52c41a);*/
+/*}*/
+
+/*.manage-title {*/
+/*    color: #1890ff;*/
+/*    border-bottom: 2px solid #1890ff;*/
+/*    padding-bottom: 10px;*/
+/*    margin-bottom: 20px;*/
+/*}*/
+
+/*.table-container {*/
+/*    background-color: #fafafa;*/
+/*    padding: 20px;*/
+/*    border-radius: 4px;*/
+/*    box-shadow: 0 2px 8px rgba(0,0,0,0.05);*/
+/*}*/
+
+/*.custom-table .ant-table-thead > tr > th {*/
+/*    background-color: #e6f7ff;*/
+/*    color: #1890ff;*/
+/*}*/
+
+/*.custom-table .ant-table-tbody > tr:hover > td {*/
+/*    background-color: #e6f7ff;*/
+/*}*/
+
+/*.status-tag {*/
+/*    padding: 2px 8px;*/
+/*    border-radius: 4px;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*.status-graded {*/
+/*    background-color: #d9f7be;*/
+/*    color: #52c41a;*/
+/*}*/
+
+/*.status-pending {*/
+/*    background-color: #fff1f0;*/
+/*    color: #ff4d4f;*/
+/*}*/
+
+/*.button-grade {*/
+/*    color: #1890ff;*/
+/*}*/
+
+/*.button-graded {*/
+/*    color: #d9d9d9;*/
+/*}*/
+
+/*!* 装饰元素 *!*/
+/*.manage-container::after {*/
+/*    content: "📊";*/
+/*    position: absolute;*/
+/*    bottom: 10px;*/
+/*    right: 10px;*/
+/*    font-size: 24px;*/
+/*    opacity: 0.2;*/
+/*}*/
+
+/*@media (max-width: 768px) {*/
+/*    .manage-container {*/
+/*        padding: 20px;*/
+/*    }*/
+/*}*/
