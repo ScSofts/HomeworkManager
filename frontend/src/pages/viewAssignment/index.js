@@ -21,7 +21,7 @@ const HomeworkItem = ({ homeworkId, classId, onViewDetails }) => {
                 cover={
                     <div style={{ height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f0f0' }}>
                         <img
-                            src={`http://192.168.1.104:8080/files/homework_${homeworkId}.png`}
+                            src={`/files/homework_${homeworkId}.png`}
                             alt="作业图片"
                             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                         />

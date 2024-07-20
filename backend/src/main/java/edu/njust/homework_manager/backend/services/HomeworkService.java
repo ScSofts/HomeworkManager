@@ -40,6 +40,7 @@ public class HomeworkService {
                     .description(description)
                     .deadline(deadline)
                     .created_at(new Date())
+                    .teacher(classroom.getTeacher())
                     .build();
             return homeworkRepository.save(homework);
         } catch (Exception e) {

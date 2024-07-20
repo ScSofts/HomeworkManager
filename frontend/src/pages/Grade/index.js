@@ -28,7 +28,7 @@ const Grade = () => {
 
     useEffect(() => {
         if (submissionId) {
-            setAssignmentImage(`http://192.168.1.104:8080/files/submit_${username}_${selectedHomeworkId}.png`);
+            setAssignmentImage(`/files/submit_${username}_${selectedHomeworkId}.png`);
         }
         setIsLoading(false);
     }, [submissionId, username]);
