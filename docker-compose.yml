@@ -2,6 +2,7 @@ version: "3"
 
 services:
   backend:
+    container_name: backend
     image: backend:latest
     build:
       context: ./backend
@@ -10,6 +11,7 @@ services:
       - "80:8080"
     volumes:
       - ./data/files:/app/data/files
+      - ./config/application.yml:/app/application.yml
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/homework_manager
       SPRING_DATASOURCE_USERNAME: user
