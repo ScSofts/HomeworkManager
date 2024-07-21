@@ -2,8 +2,9 @@ import axios from "axios";
 import { getToken, removeToken } from "./token";
 import { useNavigate } from 'react-router-dom';
 
-const development = 'http://localhost:8000/';
+const development = 'http://localhost:8080/';
 const production = '/';
+const baseURL =  process.env.NODE_ENV === 'development' ? development : production;
 const request = axios.create({
     baseURL:  process.env.NODE_ENV === 'development' ? development : production, // 根据你的实际后端配置进行修改
     timeout: 5000
@@ -38,4 +39,4 @@ request.interceptors.response.use(
     }
 );
 
-export { request };
+export { request, baseURL };

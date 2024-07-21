@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStuClass } from "../../hooks/useStuClass";
 import { useHomework, useHomeworkBrief } from "../../hooks/useHomework";
 import moment from 'moment';
+import {baseURL} from "../../utils/request";
 
 const { Option } = Select;
 
@@ -21,7 +22,7 @@ const HomeworkItem = ({ homeworkId, classId, onViewDetails }) => {
                 cover={
                     <div style={{ height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f0f0' }}>
                         <img
-                            src={`/files/homework_${homeworkId}.png`}
+                            src={baseURL + `files/homework_${homeworkId}.png`}
                             alt="作业图片"
                             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                         />

@@ -63,23 +63,35 @@ const AssignmentStats = () => {
             },
             yAxis: {
                 type: 'value',
-                name: '分数'
+                name: '分数',
+                axisLabel: {
+                    formatter: '{value}分'
+                },
+                splitLine: {
+                    show: true,  // 显示 y 轴的格线
+                    lineStyle: {
+                        color: '#ccc',  // 格线的颜色
+                        type: 'solid'   // 格线的类型，例如 'solid', 'dashed', 'dotted'
+                    }
+                },
+                min: 0,
+                max: 100
             },
             series: [
                 {
                     name: '平均分',
                     type: 'bar',
-                    data: homeworkStats.map(item => item.averageGrade || 0)
+                    data: homeworkStats.map(item => item.averageGrade.toFixed(2) || 0),
                 },
                 {
                     name: '最高分',
                     type: 'bar',
-                    data: homeworkStats.map(item => item.highestGrade || 0)
+                    data: homeworkStats.map(item => item.highestGrade.toFixed(2) || 0),
                 },
                 {
                     name: '最低分',
                     type: 'bar',
-                    data: homeworkStats.map(item => item.lowestGrade || 0)
+                    data: homeworkStats.map(item => item.lowestGrade.toFixed(2) || 0),
                 }
             ]
         };

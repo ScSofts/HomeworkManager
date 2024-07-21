@@ -9,6 +9,7 @@ import { useSubmissionDetail } from "../../hooks/useHomework";
 import { gradeSubmissionAPI } from "../../apis/homework";
 
 import { useSelector } from "react-redux";
+import {baseURL} from "../../utils/request";
 
 
 const Grade = () => {
@@ -28,7 +29,7 @@ const Grade = () => {
 
     useEffect(() => {
         if (submissionId) {
-            setAssignmentImage(`/files/submit_${username}_${selectedHomeworkId}.png`);
+            setAssignmentImage(`${baseURL}files/submit_${username}_${selectedHomeworkId}.png`);
         }
         setIsLoading(false);
     }, [submissionId, username]);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Select, Spin } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useClass } from '../../hooks/useClass';
-import { useSubmission, useHomeworkTitle, useSubmittedHomework, useSubmissionBrief, useSubmissionDetail } from '../../hooks/useHomework';
+import { useSubmission, useHomeworkTitle, useSubmittedHomework, useSubmissionBrief } from '../../hooks/useHomework';
 import { useSelector } from 'react-redux';
 import './index.css';
 
@@ -15,7 +15,6 @@ const Manage = () => {
     const [selectedHomeworkId, setSelectedHomeworkId] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [homeworkTitles, setHomeworkTitles] = useState({});
-    const [currentLoadingIndex, setCurrentLoadingIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const token = useSelector(state => state.user.token);
@@ -24,12 +23,10 @@ const Manage = () => {
     const { classList } = useClass(token, username);
     const { homeworkList } = useSubmission(selectedClassId);
 
-    useHomeworkTitle(homeworkList, setHomeworkTitles, homeworkTitles);
-    const { submissionList } = useSubmittedHomework(selectedHomeworkId);
+    useHomeworkTitle(homeworkList, setHomeworkTitles);
+    const { submissionList } = useSubmittedHomework(selectedHomeworkId, loading);
 
-    const currentLoadingSubmissionId = submissionList[currentLoadingIndex];
-    const { name: currentStudentName } = useSubmissionDetail(currentLoadingSubmissionId);
-    const { status } = useSubmissionBrief(currentLoadingSubmissionId);
+    const {submissionBriefs, selectedHomeworkId: currentSelectedHomeworkId} = useSubmissionBrief(selectedHomeworkId, submissionList, loading, setLoading);
 
     // 初始化选择第一个班级
     useEffect(() => {
@@ -52,13 +49,13 @@ const Manage = () => {
     useEffect(() => {
         if (submissionList && submissionList.length > 0) {
             setTableData(submissionList.map((submissionId) => ({
+                index: submissionId,
                 key: submissionId,
                 studentName: '加载中...',
                 assignmentStatus: '加载中...',
                 submissionId,
                 selectedClassId
             })));
-            setCurrentLoadingIndex(0);
             setLoading(true);
         } else {
             setTableData([]);
@@ -67,25 +64,25 @@ const Manage = () => {
     }, [submissionList]);
 
     const updateStudentNameAndStatus = useCallback(() => {
-        if (currentStudentName && currentLoadingSubmissionId) {
-            setTableData(prev => prev.map(item =>
-                item.submissionId === currentLoadingSubmissionId
-                    ? {
-                        ...item,
-                        studentName: currentStudentName,
-                        assignmentStatus: status === 'PENDING' ? '未批改' :
-                            status === 'ACCEPTED' ? '已批改' : '未提交'
+        if (submissionBriefs.length === submissionList.length && currentSelectedHomeworkId === selectedHomeworkId) {
+            setTableData(prev =>
+                submissionBriefs.map(({submission_id, username, status}) => {
+                    for (const item of prev) {
+                        if (item.submissionId === submission_id) {
+                            return {
+                                ...item,
+                                studentName: username,
+                                assignmentStatus: status === 'PENDING' ? '未批改' :
+                                    status === 'ACCEPTED' ? '已批改' : '未提交'
+                            }
+                        }
                     }
-                    : item
-            ));
-
-            if (currentLoadingIndex < submissionList.length - 1) {
-                setCurrentLoadingIndex(prevIndex => prevIndex + 1);
-            } else {
-                setLoading(false);
-            }
+                    return prev;
+                })
+            );
+            setLoading(false);
         }
-    }, [currentStudentName, currentLoadingSubmissionId, status, currentLoadingIndex, submissionList.length]);
+    }, [submissionBriefs, submissionList.length]);
 
     useEffect(() => {
         updateStudentNameAndStatus();
@@ -145,14 +142,12 @@ const Manage = () => {
         setSelectedHomeworkId(null);
         setTableData([]);
         setHomeworkTitles({});
-        setCurrentLoadingIndex(0);
         setLoading(true);
     };
 
     const handleHomeworkChange = (value) => {
         setSelectedHomeworkId(value);
         setTableData([]);
-        setCurrentLoadingIndex(0);
         setLoading(true);
     };
 

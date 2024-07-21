@@ -99,8 +99,8 @@ function useSubmission(classId){
 
     const token=useSelector(state=>state.user.token)
     const username=JSON.parse(window.atob(token.split('.')[1])).username
-    console.log(username)
     useEffect(() => {
+        console.log(username)
         //1.封装函数 在函数体内调用接口
         const getHomeworkList = async () => {
             const res = await getSubmissionAPI(token,username,classId)
@@ -118,11 +118,11 @@ function useSubmission(classId){
     }
 }
 
-function useHomeworkTitle(homeworkIds, setTitles, titles){
+function useHomeworkTitle(homeworkIds, setTitles){
     const token = useSelector(state => state.user.token)
     const username = JSON.parse(window.atob(token.split('.')[1])).username
-    console.log(username)
     useEffect(() => {
+        console.log(username)
         //1.封装函数 在函数体内调用接口
         const getHomeworkTitle = async () => {
             for(const homeworkId of homeworkIds) {
@@ -148,17 +148,16 @@ function useSubmittedHomework(homeworkId){
 
     const token=useSelector(state=>state.user.token)
     const username=JSON.parse(window.atob(token.split('.')[1])).username
-    console.log(username)
     useEffect(() => {
-        //1.封装函数 在函数体内调用接口
-        const getHomeworkList = async () => {
-            const res = await getSubmittedHomeworkAPI(token,username,homeworkId)
-            // console.log(res.data)
-            setSubmissionList(res.data)
-        }
-        //2.调用函数
-        if(homeworkId != null)
-            getHomeworkList()
+            //1.封装函数 在函数体内调用接口
+            const getHomeworkList = async () => {
+                const res = await getSubmittedHomeworkAPI(token, username, homeworkId)
+                // console.log(res.data)
+                setSubmissionList(res.data)
+            }
+            //2.调用函数
+            if (homeworkId != null)
+                getHomeworkList()
     }, [token,username,homeworkId])
 
     //2.把组件中要用到的数据return出去
@@ -167,25 +166,26 @@ function useSubmittedHomework(homeworkId){
     }
 }
 
-function useSubmissionBrief(submissionId){
+function useSubmissionBrief(selectedHomeworkId, submissionIds, loading, setLoading){
     const token = useSelector(state => state.user.token)
     const username = JSON.parse(window.atob(token.split('.')[1])).username
-    const [status, setStatus] = useState(null)
+    const [data, setData] = useState([])
     useEffect(() => {
-        //1.封装函数 在函数体内调用接口
-        const getSubmissionBrief = async () => {
-            const res = await getSubmissionBriefAPI(token, username, submissionId)
-            setStatus(res.data.status)
-        }
-        //2.调用函数
-        if (submissionId != null)
-            getSubmissionBrief()
-    }, [token, username, submissionId])
+        if(loading)
+            Promise.all(submissionIds.map(async (submissionId) => {
+                const res = await getSubmissionBriefAPI(token, username, submissionId)
+                return await res.data;
+            })).then((value) => {
+                setData(value)
+                setLoading(false)
+            })
+    }, [token, username, data, loading, selectedHomeworkId, submissionIds])
 
     //2.把组件中要用到的数据return出去
     return {
-        status,
-    }
+        submissionBriefs: data,
+        selectedHomeworkId
+    };
 }
 
 function useSubmissionDetail(submissionId){

@@ -23,7 +23,7 @@ spring:
 server:
     port: 8080
     cors:
-        allowed-origins: []
+        allowed-origins: ["http://localhost:6135/"]
 
 security:
     salt: homework-salt

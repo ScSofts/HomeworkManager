@@ -32,18 +32,15 @@ public class BackendApplication {
                 .create();
     }
 
-    @Configuration
-    public class MvcConfiguration implements WebMvcConfigurer {
-        @Override
-        public void addCorsMappings(CorsRegistry registry) {
-            registry.addMapping("/**")
-                    .allowedOrigins(corsConfig.getAllowedOrigins().toArray(String[]::new));
-        }
-
-    }
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-        return new MvcConfiguration();
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins(corsConfig.getAllowedOrigins().toArray(String[]::new));
+            }
+        };
     }
 
     private final CorsConfig corsConfig;

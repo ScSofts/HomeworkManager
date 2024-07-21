@@ -8,6 +8,7 @@ import moment from 'moment';
 import { useSelector } from 'react-redux';
 import { submitHomeworkAPI } from "../../apis/homework";
 import {submitImageAPI} from "../../apis/image";
+import {baseURL} from "../../utils/request";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -171,7 +172,7 @@ const SubmitAssignment = () => {
                     <Card title={title || '作业标题'} style={{ marginBottom: 20 }}>
                         {/*显示作业图片*/}
                         <p><strong>作业图片</strong> </p>
-                        <img src={"http://192.168.1.104:8080/files/homework_"+currentHomeworkId+".png"} alt="作业图片" style={{ width: 180, height: 180 }} />
+                        <img src={baseURL + "files/homework_"+currentHomeworkId+".png"} alt="作业图片" style={{ width: 180, height: 180 }} />
                         <p><strong>发布时间：</strong>{formattedDate}</p>
                         <p><strong>作业要求：</strong><div ref={contentRef}>{'加载中...'}</div></p>
                         <TextArea
